@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from app.rag import retrieve_context
+from app.RAG.rag import retrieve_context
 
 load_dotenv()
 
