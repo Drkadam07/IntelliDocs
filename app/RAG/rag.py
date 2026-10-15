@@ -11,8 +11,8 @@ dummy_chunks = ["This is a sample sentence used only to warm up the embedding mo
 list(embedder.embed(dummy_chunks))
 print(f"DEBUG - embedder warmup took {time.time() - _warmup_start:.2f}s")
 
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-collection = chroma_client.get_or_create_collection("studymate_docs")
+chroma_client = chromadb.PersistentClient(path="../../chroma_db")
+collection = chroma_client.get_or_create_collection("IntelliDocs_docs")
 
 def extract_pdf_text(path):
     reader = PdfReader(path)
@@ -65,5 +65,5 @@ def retrieve_context(question, top_k=3, threshold=1.8):
 
 def clear_collection():
     global collection
-    chroma_client.delete_collection("studymate_docs")
-    collection = chroma_client.get_or_create_collection("studymate_docs")
+    chroma_client.delete_collection("IntelliDocs_docs")
+    collection = chroma_client.get_or_create_collection("IntelliDocs_docs")

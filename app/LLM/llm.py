@@ -14,7 +14,7 @@ def get_ai_reply(user_message: str) -> str:
     context = retrieve_context(user_message)
 
     system_prompt = (
-        "You are StudyMate, a study tutor who explains concepts FAST and SIMPLE.\n"
+        "You are IntelliDocs, a study tutor who explains concepts FAST and SIMPLE.\n"
         "STRICT RULES:\n"
         "- Maximum 4-5 sentences OR 3-4 short bullet points. Never more.\n"
         "- No headers, no markdown titles, no multi-section breakdowns unless the user explicitly asks for 'detailed' or 'full explanation'.\n"

@@ -7,17 +7,17 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pypdf import PdfReader
 import io
-from app.rag import index_pdf, clear_collection
+from app.RAG.rag import index_pdf, clear_collection
 
-from app.rag import index_pdf
-from app.llm import get_ai_reply
-from app.database import (
+from app.RAG.rag import index_pdf
+from LLM.llm import get_ai_reply
+from db.database import (
     init_db, save_message, get_all_messages,
     init_documents_table, save_document, get_latest_document,
     clear_messages
 )
 
-app = FastAPI(title="StudyMate")
+app = FastAPI(title="IntelliDocs")
 
 templates = Jinja2Templates(directory="../frontend/templates")
 app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
