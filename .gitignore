@@ -6,3 +6,4 @@ chroma_db/
 chat_history.db
 uploads/
 venv/
+node_modules
