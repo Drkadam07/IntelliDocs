@@ -203,6 +203,20 @@ This project demonstrates practical experience with:
 - Persisting application data with SQLite.
 - Developing a browser-based application using HTML, CSS, and JavaScript.
 
+---
+##### Demo image of the IntelliDocs web interface:
+--- 
+![Project Screenshot](intellidocs-frontend/Assets/img1.png)
+![Project Screenshot](intellidocs-frontend/Assets/img2.png)
+![Project Screenshot](intellidocs-frontend/Assets/img3.png)
+![Project Screenshot](intellidocs-frontend/Assets/img4.png)
+![Project Screenshot](intellidocs-frontend/Assets/img7.png)
+![Project Screenshot](intellidocs-frontend/Assets/img5.png)
+![Project Screenshot](intellidocs-frontend/Assets/img6.png)
+
+
+
+
 ## 📜 License
 
 This project is available under the MIT License if you choose to distribute it under those terms. Add a `LICENSE` file to the repository before describing it as officially licensed under MIT.
