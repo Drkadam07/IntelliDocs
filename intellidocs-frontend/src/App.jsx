@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useApp } from "./store.jsx";
 import Layout from "./components/Layout.jsx";
 import Auth, { Verify } from "./pages/Auth.jsx";
+import Landing from "./pages/Landing.jsx";
 import Chat from "./pages/Chat.jsx";
 import Library from "./pages/Library.jsx";
 import { Profile, Settings } from "./pages/Account.jsx";
@@ -9,13 +10,14 @@ import { Profile, Settings } from "./pages/Account.jsx";
 function Guard() {
   const { user, ready } = useApp();
   if (!ready) return <div className="center muted">Loading…</div>;
-  return user ? <Layout /> : <Navigate to="/login" replace />;
+  return user ? <Layout /> : <Navigate to="/welcome" replace />;
 }
 
 export default function App() {
   const { user } = useApp();
   return (
     <Routes>
+      <Route path="/welcome" element={<Landing />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth mode="login" />} />
       <Route path="/register" element={user ? <Navigate to="/" replace /> : <Auth mode="register" />} />
       <Route path="/verify" element={user ? <Navigate to="/" replace /> : <Verify />} />

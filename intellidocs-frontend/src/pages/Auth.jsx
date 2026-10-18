@@ -10,7 +10,7 @@ function Shell({ children }) {
   return (
     <div className="auth">
       <div className="auth-art">
-        <div className="brand">IntelliDocs</div>
+        <Link to="/welcome" className="brand">IntelliDocs</Link>
         <div>
           <h1>Ask your documents anything.</h1>
           <ul className="points">
