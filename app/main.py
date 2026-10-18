@@ -1,42 +1,37 @@
-from pathlib import Path
-import os
-
 from fastapi import FastAPI
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.db.session import engine, Base
+from app.routers import  users, chats, documents, auth
 
-from app.db.database import init_db, init_documents_table
-from app.route import router
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
-# Project paths
-BASE_DIR = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = BASE_DIR / "frontend" / "templates"
-STATIC_DIR = BASE_DIR / "frontend" / "static"
-UPLOAD_DIR = BASE_DIR / "uploads"
-
-# Create uploads directory
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-# Initialize FastAPI
-app = FastAPI(title="IntelliDocs")
-
-# Configure templates and static files
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
-
-app.mount(
-    "/static",
-    StaticFiles(directory=str(STATIC_DIR)),
-    name="static"
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    description="Production backend for IntelliDocs AI-Powered PDF Q&A"
 )
 
-# Initialize database
-init_db()
-init_documents_table()
+# Enable CORS for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Register API routes
-app.include_router(router)
+# Include Routers
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(chats.router)
+app.include_router(documents.router)
 
-
-@app.get("/health")
+@app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "ok", "app": "IntelliDocs"}
+    return {"status": "ok", "app": settings.PROJECT_NAME}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
