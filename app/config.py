@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     #CROS 
     CORS_ORIGINS: list[str] = [
-            "http://localhost:5173",
+            "https://intelli-docs-mu.vercel.app",
             "http://localhost:3000",
             "http://localhost:8000",
         ]
