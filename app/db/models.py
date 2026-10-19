@@ -1,3 +1,4 @@
+# app/db/models.py
 import time
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
@@ -30,7 +31,9 @@ class Document(Base):
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     name = Column(String(255), nullable=False)
     size = Column(Integer, nullable=False)
     file_path = Column(String(500), nullable=False)
@@ -43,7 +46,9 @@ class Chat(Base):
     __tablename__ = "chats"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     title = Column(String(255), default="New Chat")
     created = Column(BigInteger, default=current_time_ms)
     updated = Column(BigInteger, default=current_time_ms, onupdate=current_time_ms)
@@ -58,7 +63,9 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, ForeignKey("chats.id"), nullable=False)
+    chat_id = Column(
+        Integer, ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     role = Column(String(10), nullable=False)  # "user" or "bot"
     content = Column(Text, nullable=False)
     created = Column(BigInteger, default=current_time_ms)

@@ -1,23 +1,22 @@
-import os
+# app/config.py
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     PROJECT_NAME: str = "IntelliDocs"
-    SECRET_KEY: str = "super-secret-key"
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
-    DATABASE_URL: str = "sqlite:///./intellidocs.db"
-
-    #CROS 
+    # CROS 
     CORS_ORIGINS: list[str] = [
             "https://intelli-docs-mu.vercel.app",
             "http://localhost:3000",
             "http://localhost:8000",
         ]
-    
+    # PostgreSQL Database URL (Neon or Supabase)
+    DATABASE_URL: str = ""
+
     # Paths
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
@@ -38,6 +37,13 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    @property
+    def normalized_database_url(self) -> str:
+        url = self.DATABASE_URL.strip()
+        # Fix SQLAlchemy dialect prefix if copied as postgres://
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
 
 settings = Settings()
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
