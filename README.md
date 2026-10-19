@@ -1,211 +1,462 @@
 # IntelliDocs — AI-Powered PDF Q&A Assistant
 
-An AI-powered PDF question-answering assistant that allows users to interact with documents using natural language. Built with **Retrieval-Augmented Generation (RAG)**, IntelliDocs retrieves relevant information from uploaded PDFs and uses a Large Language Model (LLM) to generate context-grounded answers.
+An enterprise-ready, AI-powered PDF question-answering assistant that lets users interact with their documents using natural language. IntelliDocs uses a production-oriented **Retrieval-Augmented Generation (RAG)** pipeline to extract, index, retrieve, and analyze PDF content, delivering context-grounded answers powered by Groq's high-throughput LLM inference.
 
-Instead of manually searching through lengthy documents, users can upload a PDF, ask questions, and receive answers based on the document's content.
+The application combines FastAPI, ChromaDB, BAAI embeddings, cloud object storage, and PostgreSQL to provide secure, multi-user document management and conversational AI.
 
-## 🚀 Features
+---
 
+## 🚀 Key Features
+
+- **Multi-Tenant Architecture:** JWT-based authentication and user-scoped document access.
+- **Email OTP Verification:** Six-digit one-time passwords for account verification.
+- **In-Memory PDF Processing:** Extract and process PDF content using PyPDF without temporary local files.
+- **Retrieval-Augmented Generation (RAG):** Semantic document retrieval combined with LLM-generated answers.
+- **Semantic Embeddings:** FastEmbed with `BAAI/bge-small-en-v1.5`.
+- **Vector Search:** ChromaDB indexing with user and document metadata filtering.
+- **Relevance Filtering:** Distance-threshold filtering to reduce responses based on irrelevant context.
+- **Cloud Object Storage:** S3-compatible storage using Neon Object Storage, Cloudflare R2, or AWS S3.
+- **Presigned Download URLs:** Temporary links for secure document downloads.
+- **Persistent Chat History:** Multiple chat sessions with saved messages and conversation titles.
+- **Adaptive LLM Fallback:** Configurable Groq model fallback to improve resilience.
+- **Relational Database:** PostgreSQL or SQLite support through SQLAlchemy 2.0.
+- **RESTful API:** Endpoints for authentication, user profiles, documents, and conversations.
+- **Interactive API Documentation:** Built-in Swagger UI and ReDoc.
+- **Docker Support:** Containerized application deployment.
 - **PDF Upload:** Upload PDF documents and extract text using PyPDF.
 - **Natural Language Q&A:** Ask questions about document content using everyday language.
-- **Retrieval-Augmented Generation (RAG):** Combine semantic retrieval with LLM-based answer generation.
-- **Semantic Search:** Retrieve relevant document passages using vector embeddings.
-- **Vector Database:** Store and search document embeddings using ChromaDB.
-- **Context Relevance Filtering:** Filter weak retrieval results using a configurable distance threshold.
-- **Grounded Answers:** Instruct the LLM to answer only using the retrieved document context.
-- **Fast Inference:** Generate responses using the Groq API.
-- **Persistent Chat History:** Store conversations in SQLite.
-- **Interactive Web Interface:** Access document Q&A through a browser-based interface.
-- **Modular Architecture:** Separate document retrieval, LLM integration, API routes, and database operations.
+---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 | Component | Technology |
-|---|---|
-| Backend | Python, FastAPI |
-| Frontend | HTML, CSS, JavaScript |
-| LLM Integration | Groq API |
-| Embedding Model | FastEmbed — BAAI/bge-small-en-v1.5 |
+| --- | --- |
+| Backend Framework | Python 3.10+, FastAPI |
+| ASGI Server | Uvicorn |
+| Database | PostgreSQL / SQLite |
+| ORM | SQLAlchemy 2.0 |
+| Request Validation | Pydantic |
+| Object Storage | Neon Object Storage / Cloudflare R2 / AWS S3 |
+| Storage SDK | Boto3 |
 | Vector Database | ChromaDB |
+| Embedding Library | FastEmbed |
+| Embedding Model | `BAAI/bge-small-en-v1.5` |
+| LLM Inference | Groq API |
+| LLM Models | Configurable Groq-supported chat models |
+| Authentication | JWT using PyJWT |
+| Password Hashing | Argon2 using `pwdlib` |
+| Email Verification | `aiosmtplib` |
 | PDF Processing | PyPDF |
-| Chat History | SQLite |
-| Templating Engine | Jinja2 |
-| Architecture | Retrieval-Augmented Generation (RAG) |
+| Frontend | HTML5, CSS3, JavaScript |
+| Templates | Jinja2 |
+| Deployment | Docker |
 
-## 🧠 How It Works
+---
 
-IntelliDocs follows a document-grounded RAG pipeline.
+## 🧠 System Architecture
 
-1. **Upload:** The user uploads a PDF, and the application extracts its text using PyPDF.
-2. **Chunk:** The extracted text is split into smaller, overlapping chunks to preserve context and improve retrieval.
-3. **Embed:** FastEmbed converts each chunk into a numerical vector using the BAAI/bge-small-en-v1.5 model.
-4. **Store:** The embeddings and corresponding text chunks are indexed in ChromaDB.
-5. **Ask:** The user's question is converted into a vector using the same embedding model.
-6. **Retrieve:** ChromaDB searches for document chunks that are semantically similar to the question.
-7. **Filter:** A relevance-distance threshold helps reject weakly matching results.
-8. **Generate:** Relevant passages are passed to the Groq-hosted LLM with instructions to answer using only the supplied context.
-9. **Respond:** The generated answer is displayed in the web interface. If sufficient context is unavailable, the application is designed to avoid unsupported answers.
-10. **Persist:** Conversation history is stored in SQLite for future access.
+```
+                         ┌──────────────────────┐
+                         │      User / UI       │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   FastAPI Backend    │
+                         └──────────┬───────────┘
+                                    │
+                         ┌──────────▼───────────┐
+                         │ JWT Authentication   │
+                         │ & User Authorization │
+                         └──────────┬───────────┘
+                                    │
+                   ┌────────────────┴────────────────┐
+                   │                                 │
+                   ▼                                 ▼
+        ┌─────────────────────┐           ┌─────────────────────┐
+        │   PDF Ingestion     │           │    Chat / Query     │
+        └──────────┬──────────┘           └──────────┬──────────┘
+                   │                                 │
+                   ▼                                 ▼
+        ┌─────────────────────┐           ┌─────────────────────┐
+        │ In-Memory PDF       │           │ FastEmbed Query     │
+        │ Extraction (PyPDF)  │           │ Embedding           │
+        └──────────┬──────────┘           └──────────┬──────────┘
+                   │                                 │
+                   ▼                                 ▼
+        ┌─────────────────────┐           ┌─────────────────────┐
+        │ Text Chunking       │           │ ChromaDB Semantic   │
+        │ 250 Words / 30      │           │ Search              │
+        │ Words Overlap       │           └──────────┬──────────┘
+        └──────────┬──────────┘                      │
+                   │                                 ▼
+                   ▼                      ┌─────────────────────┐
+        ┌─────────────────────┐           │ User-Scoped Context │
+        │ BAAI Embeddings     │           │ & Relevance Filter  │
+        └──────────┬──────────┘           └──────────┬──────────┘
+                   │                                 │
+                   ▼                                 ▼
+        ┌─────────────────────┐           ┌─────────────────────┐
+        │ ChromaDB Index      │◄──────────│ Groq LLM Inference  │
+        └─────────────────────┘           └──────────┬──────────┘
+                                                     │
+                                                     ▼
+                                          ┌─────────────────────┐
+                                          │ Grounded Answer     │
+                                          │ & Chat Persistence  │
+                                          └──────────┬──────────┘
+                                                     │
+                                                     ▼
+                                          ┌─────────────────────┐
+                                          │    User / UI        │
+                                          └─────────────────────┘
 
-<!-- ## 📂 Project Structure
-
-```text
-IntelliDocs/
-├── app/
-│   
-├── requirements.txt     # Python dependencies
-├── .gitignore           # Git ignored files
-└── README.md            # Project documentation
+        Supporting Services:
+        ├── PostgreSQL / SQLite: Users, documents, chats, messages
+        ├── S3-Compatible Storage: Original PDF files
+        ├── SMTP: Email OTP delivery
+        └── Groq: LLM inference and model fallback
 ```
 
-## ⚙️ Installation and Setup
+### How It Works
 
-### Prerequisites
+1. **Authentication:** Users register, verify their email using a six-digit OTP, and authenticate using a JWT bearer token.
+2. **Document Upload:** PDF files are uploaded to S3-compatible object storage.
+3. **Text Extraction:** PyPDF extracts document text in memory.
+4. **Chunking:** Extracted text is divided into overlapping chunks of approximately 250 words, with a 30-word overlap.
+5. **Embedding Generation:** FastEmbed converts each chunk into a semantic vector using `BAAI/bge-small-en-v1.5`.
+6. **Vector Indexing:** ChromaDB stores vectors alongside document and user metadata.
+7. **Query Processing:** A user's question is embedded and compared with the relevant document vectors.
+8. **Context Filtering:** Retrieved chunks are filtered by relevance and user access.
+9. **Answer Generation:** Relevant context and the question are sent to a configured Groq model.
+10. **Chat Persistence:** User prompts and assistant responses are saved to the relational database.
 
-- Python 3.10 or a compatible version supported by your dependencies
-- pip package manager
+---
+
+## 📂 Project Structure
+
+```
+IntelliDocs/
+├── app/
+│   ├── core/
+│   │   ├── dependencies.py       # Authentication guards
+│   │   ├── email.py              # Async SMTP OTP dispatcher
+│   │   └── security.py           # Password hashing and JWT utilities
+│   │
+│   ├── db/
+│   │   ├── models.py             # SQLAlchemy database models
+│   │   └── session.py            # Database engine and sessions
+│   │
+│   ├── routers/
+│   │   ├── auth.py               # Registration, OTP, login
+│   │   ├── chats.py              # Chat sessions and RAG orchestration
+│   │   ├── documents.py          # PDF upload and management
+│   │   └── users.py              # User profile management
+│   │
+│   ├── schemas/
+│   │   └── __init__.py           # Pydantic schemas
+│   │
+│   ├── services/
+│   │   ├── llm.py                # Groq integration and model fallback
+│   │   ├── rag.py                # Embeddings and vector retrieval
+│   │   └── storage.py            # S3-compatible object storage
+│   │
+│   ├── config.py                 # Environment-based configuration
+│   └── main.py                   # FastAPI application entry point
+│
+│
+├── .dockerignore
+├── .env                          # Local environment configuration
+├── Dockerfile
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ⚙️ Installation and Local Setup
+
+### 1\. Prerequisites
+
+Ensure the following are available:
+
+- Python 3.10 or later
+- Git
 - A Groq API key
+- SMTP credentials for email verification
+- PostgreSQL or SQLite
+- An S3-compatible storage account, or a supported local development configuration
 
-### 1. Clone the Repository
+External service references:
 
-```bash
-git clone <your-repository-url>
+- [Groq Console](<https://console.groq.com/>)
+- [Neon](<https://neon.tech/>)
+- [Cloudflare R2](<https://developers.cloudflare.com/r2/>)
+- [AWS S3](<https://aws.amazon.com/s3/>)
+
+### 2\. Clone the Repository
+
+```
+git clone https://github.com/Drkadam07/IntelliDocs.git
 cd IntelliDocs
 ```
 
-Replace `<your-repository-url>` with your actual GitHub repository URL.
+### 3\. Create a Virtual Environment
 
-### 2. Create a Virtual Environment
+**Linux / macOS**
 
-**Windows:**
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
 ```
-
-**Linux / macOS:**
-
-```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
+**Windows — Command Prompt**
 
-```bash
+```
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+**Windows — PowerShell**
+
+```
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### 4\. Install Dependencies
+
+```
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### 5\. Configure Environment Variables
 
-Create a `.env` file in the project root and add your Groq API key:
+Create a `.env` file in the project root and configure the following values. Adapt variable names to match those defined in `app/config.py`.
 
-```env
-GROQ_API_KEY=your_groq_api_key_here
+```
+# Application
+PROJECT_NAME=IntelliDocs
+SECRET_KEY=replace-with-a-cryptographically-secure-random-secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Database: PostgreSQL
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
+
+# Alternatively, use SQLite if supported by your configuration
+# DATABASE_URL=sqlite:///./intellidocs.db
+
+# S3-Compatible Object Storage
+NEON_STORAGE_ENDPOINT=https://YOUR_STORAGE_ENDPOINT
+NEON_STORAGE_REGION=us-east-2
+NEON_STORAGE_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+NEON_STORAGE_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+NEON_STORAGE_BUCKET_NAME=intellidocs
+
+# Groq LLM
+GROQ_API_KEY=YOUR_GROQ_API_KEY
+GROQ_MODEL=
+
+# Embedding Model
+EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+
+# Email / SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=YOUR_EMAIL_APP_PASSWORD
+EMAILS_FROM_EMAIL=noreply@yourdomain.com
+EMAILS_FROM_NAME=IntelliDocs Support
 ```
 
-Obtain your API key from the [Groq Console](https://console.groq.com/).
+**Important configuration notes:**
 
-Ensure your application loads environment variables and that `.env` is included in `.gitignore`. Never commit API keys or other secrets to GitHub.
+- Replace every placeholder with valid credentials for your environment.
+- Use a cryptographically secure secret for `SECRET_KEY`.
+- For Gmail, use an App Password when your account configuration supports it.
+- Configure the object storage endpoint, region, bucket, and credentials according to your provider.
+- Confirm that the configured Groq model is currently available to your API account.
+- Ensure the database schema is initialized using the migration or initialization process implemented by the project.
+- Never commit `.env` or production credentials to version control.
 
-### 5. Run the Application
+### 6\. Run the Application
 
-Start the FastAPI development server:
-
-```bash
-uvicorn app.main:app --reload
+```
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open the application in your browser:
+The application should now be accessible at the following local URLs, assuming it starts successfully:
 
-```text
-http://127.0.0.1:8000
-```
+| Resource | URL |
+| --- | --- |
+| Application | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | [http://localhost:8000/redoc](<http://localhost:8000/redoc>) |
+| Health Check | http://localhost:8000/health |
 
-The command assumes your FastAPI instance is named `app` inside `app/main.py` and that the application serves the web interface at `/`. Adjust it if your implementation uses a different entry point. -->
-
-## 💡 Usage
-
-1. Start the IntelliDocs application.
-2. Open the application in your web browser.
-3. Upload a PDF document.
-4. Wait for the document text to be processed and indexed.
-5. Enter a question about the uploaded document.
-6. Review the answer generated from the retrieved document context.
-7. Continue asking follow-up questions and use the stored conversation history if supported by your implementation.
-
-**Example questions:**
-
-- What is the main objective of this document?
-- Summarize the key findings.
-- Explain the methodology described in the PDF.
-- What are the major challenges discussed?
-- List the important conclusions.
-- Does the document mention any limitations?
-
-## 🔍 Key Technical Concepts
-
-### Retrieval-Augmented Generation (RAG)
-
-RAG combines information retrieval with language generation. Instead of relying solely on the LLM's pretrained knowledge, IntelliDocs retrieves relevant passages from the uploaded document and supplies them as context for answering questions.
-
-### Semantic Embeddings
-
-The BAAI/bge-small-en-v1.5 model converts text into numerical vector representations. These vectors enable semantic similarity searches, helping the application find relevant passages even when the question and document use different wording.
-
-### ChromaDB
-
-ChromaDB stores document embeddings and supports similarity-based retrieval. It serves as the vector search layer in the document question-answering pipeline.
-
-### Relevance Filtering
-
-A configurable distance threshold helps the application reject weakly matching retrieval results. This reduces the likelihood of generating answers from irrelevant passages, although the threshold must be tuned and evaluated for the chosen distance metric.
-
-### Groq API
-
-The Groq API provides access to a hosted language model for generating responses from retrieved document context.
-
-### SQLite
-
-SQLite provides lightweight relational storage for conversation history and associated application data.
-
-## 🔐 Reliability and Security Considerations
-
-- Answers are designed to be grounded in retrieved document content.
-- Prompt instructions alone cannot guarantee hallucination-free responses.
-- Retrieval thresholds should be evaluated against relevant and irrelevant questions.
-- API keys should be stored in environment variables, not source code.
-- Uploaded documents should be validated and handled securely.
-- Document access controls and data retention policies should be considered before production deployment.
-
-## 🔮 Future Enhancements
-
-- Multi-PDF upload and cross-document question answering.
-- Source citations with page numbers and supporting excerpts.
-- Hybrid search combining semantic retrieval and keyword matching.
-- Streaming LLM responses.
-- Improved document management and re-indexing.
-- User authentication and document-level permissions.
-- Evaluation metrics for retrieval quality and answer faithfulness.
-- Docker-based deployment and cloud hosting.
-
-## 🎯 Learning Outcomes
-
-This project demonstrates practical experience with:
-
-- Python backend development using FastAPI.
-- Building a Retrieval-Augmented Generation pipeline.
-- Text extraction, preprocessing, and chunking.
-- Semantic embeddings and vector similarity search.
-- Integrating hosted LLM APIs.
-- Designing context-grounded question-answering workflows.
-- Persisting application data with SQLite.
-- Developing a browser-based application using HTML, CSS, and JavaScript.
+The `/health` endpoint is available if implemented and registered as described in the API reference below.
 
 ---
-##### Demo image of the IntelliDocs web interface:
---- 
+
+## 🔐 Authentication
+
+IntelliDocs uses JWT bearer authentication for protected endpoints.
+
+### Authentication Flow
+
+1. Register a user using `POST /auth/register`.
+2. Retrieve the verification code from the registered email address.
+3. Verify the account using `POST /auth/verify-otp`.
+4. Save the returned access token.
+5. Include the token in subsequent protected API requests.
+
+Example authorization header:
+
+```
+Authorization: Bearer YOUR_JWT_ACCESS_TOKEN
+```
+
+Tokens should be treated as secrets and must not be exposed in public repositories, logs, or client-side source code.
+
+---
+
+## 🧠 RAG Pipeline Details
+
+### Document Ingestion
+
+PDF files are processed using PyPDF, with extracted text divided into overlapping chunks.
+
+| Setting | Value |
+| --- | --- |
+| PDF extraction | PyPDF |
+| Chunk size | Approximately 250 words |
+| Chunk overlap | Approximately 30 words |
+| Embedding model | `BAAI/bge-small-en-v1.5` |
+| Vector database | ChromaDB |
+
+### Semantic Retrieval
+
+The retrieval service embeds incoming questions and searches for semantically related chunks.
+
+Document metadata can include:
+
+- `user_id` — identifies the document owner.
+- `doc_id` — identifies the source document.
+- Additional chunk or source metadata as required by the implementation.
+
+User-scoped retrieval helps prevent one user from retrieving another user's document content. Database authorization and vector filtering must both be enforced correctly.
+
+### Grounded Answer Generation
+
+The retrieved context is passed to the configured Groq model along with the user's question and instructions to answer from the available evidence.
+
+A relevance threshold can reject weak matches. This helps reduce unsupported answers, although it does not guarantee perfect factual accuracy.
+
+**Citation note:** If source-accurate citations are required, the application should retain page numbers and source metadata during extraction and chunking, then include those references in the answer-generation and response-formatting steps.
+
+### LLM Fallback
+
+The LLM service can be configured to try alternative supported Groq models when the primary model fails. The fallback list, error handling, retry behavior, and model availability should be verified against the implementation.
+
+---
+
+## 🗄️ Data Storage
+
+IntelliDocs uses separate storage layers for different types of data.
+
+| Storage Layer | Purpose |
+| --- | --- |
+| PostgreSQL / SQLite | User accounts, document metadata, chat sessions, and messages |
+| S3-Compatible Storage | Original PDF files |
+| ChromaDB | Semantic vectors and retrieval metadata |
+| Application Memory | Temporary PDF extraction and chunk-processing data |
+
+The document metadata, original object, and vector index should be kept consistent during document deletion and re-indexing operations.
+
+---
+
+## 🐳 Docker Deployment
+
+### 1\. Build the Image
+
+```
+docker build -t intellidocs:latest .
+```
+
+### 2\. Run the Container
+
+```
+docker run -d \
+  --name intellidocs-api \
+  -p 8000:8000 \
+  --env-file .env \
+  intellidocs:latest
+```
+
+### 3\. Inspect Container Logs
+
+```
+docker logs -f intellidocs-api
+```
+
+### 4\. Stop the Container
+
+```
+docker stop intellidocs-api
+```
+
+### 5\. Remove the Container
+
+```
+docker rm intellidocs-api
+```
+
+**Production deployment considerations:**
+
+- Use a production-grade ASGI configuration and disable development reload mode.
+- Configure persistent storage for any local ChromaDB data.
+- Use managed PostgreSQL and object storage for durable production data.
+- Configure HTTPS through a trusted reverse proxy or platform ingress.
+- Restrict CORS to trusted frontend origins.
+- Apply request-size limits, upload validation, and rate limiting.
+- Configure health checks, structured logging, monitoring, and backup policies.
+- Run database migrations as part of the deployment process.
+
+---
+
+## 🔒 Security Considerations
+
+IntelliDocs is designed around user-scoped access, but production security depends on the implementation and deployment configuration.
+
+Recommended controls include:
+
+- Hash passwords with Argon2 rather than storing plaintext passwords.
+- Use cryptographically secure, expiring OTPs and enforce attempt limits.
+- Keep JWT signing keys, API keys, database passwords, and SMTP credentials secret.
+- Validate PDF file types, file sizes, and extracted content.
+- Enforce ownership checks for every document and chat operation.
+- Apply user filtering to every vector retrieval request.
+- Use short-lived presigned URLs and avoid logging sensitive query parameters.
+- Protect destructive endpoints such as `POST /clear`.
+- Use TLS for external service connections.
+- Add rate limiting, audit logging, and appropriate error handling.
+- Treat retrieved document content as untrusted input when constructing LLM prompts.
+
+---
+
+## 🖼️ Application Preview
+
+Add screenshots or a GIF of the running application here to demonstrate the interface.
+
+Suggested assets:
+
+```
+intellidocs-frontend/Assets/
+    ├── images/
+```
+
 ![Project Screenshot](intellidocs-frontend/Assets/img1.png)
 ![Project Screenshot](intellidocs-frontend/Assets/img2.png)
 ![Project Screenshot](intellidocs-frontend/Assets/img3.png)
@@ -213,13 +464,44 @@ This project demonstrates practical experience with:
 ![Project Screenshot](intellidocs-frontend/Assets/img7.png)
 ![Project Screenshot](intellidocs-frontend/Assets/img5.png)
 ![Project Screenshot](intellidocs-frontend/Assets/img6.png)
+---
 
+## 🛣️ Future Enhancements
 
+Potential improvements for future versions include:
 
+- Page-level citations with clickable source references.
+- Streaming LLM responses.
+- Support for additional document formats.
+- Hybrid semantic and keyword retrieval.
+- Reranking for more accurate context selection.
+- Background ingestion jobs for large PDFs.
+- Document-level access controls and sharing.
+- Automated tests and continuous integration.
+- Usage analytics, observability, and configurable rate limits.
+
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, and feature suggestions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Implement and test your changes.
+4. Submit a pull request describing the changes.
+
+For significant changes, open an issue first to discuss the proposed implementation.
+
+---
 
 ## 📜 License
 
-This project is available under the MIT License if you choose to distribute it under those terms. Add a `LICENSE` file to the repository before describing it as officially licensed under MIT.
+This project is distributed under the **MIT License**.
+
+If the repository does not already contain a `LICENSE` file, add the MIT license text before distributing the project under that license.
+
+---
 
 ## 👨‍💻 Author
 
@@ -227,8 +509,7 @@ This project is available under the MIT License if you choose to distribute it u
 
 Computer Engineering Graduate | Python Developer | AI/ML Engineer
 
-- GitHub: [Drkadam07](https://github.com/Drkadam07)
+- GitHub: [@Drkadam07](<https://github.com/Drkadam07>)
+- Repository: IntelliDocs
 
 ---
-
-*IntelliDocs — Making document understanding more interactive, accessible, and efficient with AI.*
