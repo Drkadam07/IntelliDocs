@@ -13,7 +13,6 @@ class Settings(BaseSettings):
         # CORS 
     CORS_ORIGINS: list[str] = [
             "https://intellidocs-eight.vercel.app",
-            "http://localhost:5173",
             "http://localhost:8000",
         ]
 
