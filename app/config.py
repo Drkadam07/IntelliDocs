@@ -10,9 +10,9 @@ class Settings(BaseSettings):
 
     # Neon PostgreSQL URL
     DATABASE_URL: str = "sqlite:///./intellidocs.db"
-        # CROS 
+        # CORS 
     CORS_ORIGINS: list[str] = [
-            "https://intelli-docs-mu.vercel.app",
+            "https://intellidocs-frontend-self.vercel.app",
             "http://localhost:5173",
             "http://localhost:8000",
         ]
